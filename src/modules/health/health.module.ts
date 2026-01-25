@@ -8,3 +8,4 @@ import { SupabaseService } from '../../database/supabase.client';
   providers: [HealthService, SupabaseService],
 })
 export class HealthModule {}
+
