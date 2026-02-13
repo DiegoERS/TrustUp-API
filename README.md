@@ -85,10 +85,17 @@ TrustUp-API/
 │   ├── e2e/                    # End-to-end tests
 │   ├── fixtures/               # Test data
 │   └── helpers/                # Test helpers
-├── docs/                       # Standards documentation
-├── issues.per.phase/           # GitHub issues organized by phase
-└── supabase/
-    └── migrations/             # Database migrations
+├── docs/                       # Documentation
+│   ├── architecture/           # Architecture documentation
+│   ├── development/            # Development guides and standards
+│   ├── setup/                  # Setup and configuration guides
+│   └── api/                    # API reference
+├── supabase/
+│   └── migrations/             # Database migrations
+├── CONTRIBUTING.md             # Contribution guidelines
+├── ROADMAP.md                  # Development roadmap
+├── SECURITY.md                 # Security policy
+└── LICENSE                     # MIT License
 ```
 
 ## 🚀 Quick Start
@@ -147,7 +154,7 @@ cp .env.example .env
    JWT_REFRESH_SECRET=your_refresh_secret
    ```
 
-For complete setup instructions, see [Contributing Guide](./docs/contributing.md).
+For complete setup instructions, see [Installation Guide](./docs/setup/installation.md) and [Contributing Guide](./CONTRIBUTING.md).
 
 ### Running the Application
 
@@ -196,20 +203,43 @@ npm run test:cov
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `docs/` folder:
+Comprehensive documentation is organized into the following categories:
 
-- [Architecture](./docs/architecture.md) - System architecture and design principles
-- [Contributing Guide](./docs/contributing.md) - Setup and development workflow
-- [Naming Conventions](./docs/naming-conventions.md) - Code style and conventions
-- [Controllers Structure](./docs/controllers-structure.md) - Controller patterns
-- [Services Structure](./docs/services-structure.md) - Service layer patterns
-- [Error Handling](./docs/error-handling.md) - Error handling standards
-- [Response Standards](./docs/response-standards.md) - API response formats
-- [Testing Structure](./docs/testing-structure.md) - Testing guidelines
-- [Supabase Setup](./docs/supabase-setup.md) - Database setup guide
-- [Blockchain Layer](./docs/blockchain-layer.md) - Stellar/Soroban integration
+### 🏗 Architecture
 
-### API Documentation
+- [Architecture Overview](./docs/architecture/overview.md) - System architecture and design principles
+- [Blockchain Layer](./docs/architecture/blockchain-layer.md) - Stellar/Soroban integration
+- [Database Schema](./docs/architecture/database-schema.md) - PostgreSQL database design
+
+### 🚀 Getting Started
+
+- [Installation Guide](./docs/setup/installation.md) - Step-by-step setup instructions
+- [Environment Variables](./docs/setup/environment-variables.md) - Configuration reference
+- [Supabase Setup](./docs/setup/supabase-setup.md) - Database setup guide
+
+### 💻 Development
+
+- [Naming Conventions](./docs/development/naming-conventions.md) - Code style and conventions
+- [Controllers Structure](./docs/development/controllers-structure.md) - Controller patterns
+- [Services Structure](./docs/development/services-structure.md) - Service layer patterns
+- [DTO Standards](./docs/development/dto-standards.md) - Data transfer object patterns
+- [Response Standards](./docs/development/response-standards.md) - API response formats
+- [Error Handling](./docs/development/error-handling.md) - Error handling standards
+- [Guards & Filters](./docs/development/guards-filters.md) - Authentication and validation
+- [Logging Standards](./docs/development/logging-standards.md) - Logging best practices
+- [Testing Structure](./docs/development/testing-structure.md) - Testing guidelines
+
+### 📡 API Reference
+
+- [API Endpoints](./docs/api/endpoints.md) - Complete API documentation
+- [Roadmap](./ROADMAP.md) - Development phases and progress
+
+### 🤝 Contributing
+
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute to the project
+- [Security Policy](./SECURITY.md) - Security guidelines and reporting vulnerabilities
+
+### Interactive Documentation
 
 Once the server is running, visit:
 - **Swagger UI**: `http://localhost:4000/api/v1/docs`
@@ -235,12 +265,14 @@ Once the server is running, visit:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./docs/contributing.md) for:
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for:
 
 - Development setup
 - Code style guidelines
 - Testing requirements
 - Pull request process
+
+Check out the [Roadmap](./ROADMAP.md) to see what we're working on and find areas where you can contribute.
 
 ## 🙏 Acknowledgments
 
@@ -254,6 +286,10 @@ We welcome contributions! Please see our [Contributing Guide](./docs/contributin
 - 🐛 [Issue Tracker](https://github.com/TrustUp-app/TrustUp-API/issues)
 - 💬 [Discussions](https://github.com/TrustUp-app/TrustUp-API/discussions)
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
 ---
 
 <div align="center">
@@ -262,5 +298,6 @@ We welcome contributions! Please see our [Contributing Guide](./docs/contributin
 
 [![Stellar](https://img.shields.io/badge/Powered%20by-Stellar-7D00FF?style=flat-square)](https://www.stellar.org/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green?style=flat-square)](https://opensource.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
 
 </div>
