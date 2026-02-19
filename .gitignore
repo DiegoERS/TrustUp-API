@@ -76,6 +76,7 @@ Desktop.ini
 
 # Supabase (keep config but ignore local data)
 .supabase/
+supabase/.branches/
 
 # Package manager locks (keep package-lock.json, ignore others)
 yarn.lock
