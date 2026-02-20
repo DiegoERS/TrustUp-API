@@ -33,6 +33,62 @@ describe('AuthController (e2e)', () => {
     await app.close();
   });
 
+  describe('POST /auth/verify', () => {
+    const validNonce = 'a1b2c3d4e5f67890abcdef1234567890a1b2c3d4e5f67890abcdef1234567890';
+    const validSignature = Buffer.alloc(64).toString('base64');
+
+    it('should return 400 with empty body', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/verify',
+        payload: {},
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should return 400 with invalid wallet format', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/verify',
+        payload: { wallet: 'INVALID', nonce: validNonce, signature: validSignature },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should return 400 with malformed nonce (too short)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/verify',
+        payload: { wallet: validWallet, nonce: 'tooshort', signature: validSignature },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should return 400 with missing signature field', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/verify',
+        payload: { wallet: validWallet, nonce: validNonce },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should return 401 when nonce does not exist in database', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/verify',
+        payload: { wallet: validWallet, nonce: validNonce, signature: validSignature },
+      });
+
+      // Nonce was never requested, so it does not exist in the DB
+      expect(res.statusCode).toBe(401);
+    }, 10000);
+  });
+
   describe('POST /auth/nonce', () => {
     it('should return nonce and expiresAt with valid wallet', async () => {
       const res = await app.inject({

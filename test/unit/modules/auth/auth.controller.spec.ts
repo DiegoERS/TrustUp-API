@@ -6,8 +6,17 @@ describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
 
+  const expectedTokens = {
+    accessToken: 'mock.access.token',
+    refreshToken: 'mock.refresh.token',
+    expiresIn: 900,
+    tokenType: 'Bearer',
+  };
+
   const mockAuthService = {
     generateNonce: jest.fn(),
+    verifySignature: jest.fn().mockResolvedValue(undefined),
+    generateTokens: jest.fn().mockResolvedValue(expectedTokens),
   };
 
   const validWallet = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVW';
@@ -35,6 +44,9 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
+  // ---------------------------------------------------------------------------
+  // POST /auth/nonce
+  // ---------------------------------------------------------------------------
   describe('getNonce', () => {
     it('should return nonce and expiresAt', async () => {
       const expectedResult = {
@@ -50,6 +62,31 @@ describe('AuthController', () => {
       expect(result).toEqual(expectedResult);
       expect(authService.generateNonce).toHaveBeenCalledWith(validWallet);
       expect(authService.generateNonce).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /auth/verify
+  // ---------------------------------------------------------------------------
+  describe('verify', () => {
+    const validNonce = 'a1b2c3d4e5f67890abcdef1234567890a1b2c3d4e5f67890abcdef1234567890';
+    const validSignature = Buffer.alloc(64).toString('base64');
+
+    it('should return JWT tokens on valid input', async () => {
+      const dto = { wallet: validWallet, nonce: validNonce, signature: validSignature };
+      const result = await controller.verify(dto);
+
+      expect(result).toEqual(expectedTokens);
+    });
+
+    it('should call verifySignature with the full DTO and generateTokens with the wallet', async () => {
+      const dto = { wallet: validWallet, nonce: validNonce, signature: validSignature };
+      await controller.verify(dto);
+
+      expect(authService.verifySignature).toHaveBeenCalledWith(dto);
+      expect(authService.verifySignature).toHaveBeenCalledTimes(1);
+      expect(authService.generateTokens).toHaveBeenCalledWith(validWallet);
+      expect(authService.generateTokens).toHaveBeenCalledTimes(1);
     });
   });
 });
