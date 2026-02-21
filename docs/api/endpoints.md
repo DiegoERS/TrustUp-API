@@ -108,14 +108,19 @@ Get authenticated user's profile.
 **Response** (200 OK):
 ```json
 {
-  "wallet": "GABC...XYZ",
-  "name": "Maria Garcia",
-  "avatar": "https://...",
-  "preferences": {
-    "notifications": true,
-    "theme": "dark"
+  "success": true,
+  "data": {
+    "wallet": "GABC...XYZ",
+    "name": "Maria Garcia",
+    "avatar": "https://...",
+    "preferences": {
+      "notifications": true,
+      "theme": "dark",
+      "language": "en"
+    },
+    "createdAt": "2026-01-15T10:00:00.000Z"
   },
-  "createdAt": "2026-01-15T10:00:00.000Z"
+  "message": "User retrieved successfully"
 }
 ```
 
