@@ -21,6 +21,7 @@ describe('UsersController (e2e)', () => {
         wallet: 'GABC123XYZ456DEF789ABCDEF0123456789ABCDEF0123456789ABCDEFGHIJ',
         name: null,
         avatar: null,
+        preferences: { notifications: true, theme: 'system', language: 'en' },
         createdAt: '2026-02-19T14:00:00.000Z',
     };
 
