@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase.client';
 
 export interface UserPreferencesRecord {
@@ -45,7 +45,12 @@ export class UsersRepository {
             .eq('wallet_address', wallet)
             .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+            throw new InternalServerErrorException({
+                code: 'DATABASE_QUERY_ERROR',
+                message: error.message,
+            });
+        }
         if (!data) return null;
 
         // Normalize: Supabase returns the nested relation as an array
@@ -71,7 +76,13 @@ export class UsersRepository {
             .select('id, wallet_address, display_name, avatar_url, status, created_at')
             .single();
 
-        if (error) throw error;
+        if (error) {
+            throw new InternalServerErrorException({
+                code: 'DATABASE_QUERY_ERROR',
+                message: error.message,
+            });
+        }
+
         return { ...(data as Omit<UserRecord, 'user_preferences'>), user_preferences: null };
     }
 
@@ -87,7 +98,13 @@ export class UsersRepository {
             .select('notifications_enabled, language, theme')
             .single();
 
-        if (error) throw error;
+        if (error) {
+            throw new InternalServerErrorException({
+                code: 'DATABASE_QUERY_ERROR',
+                message: error.message,
+            });
+        }
         return data as UserPreferencesRecord;
+
     }
 }
