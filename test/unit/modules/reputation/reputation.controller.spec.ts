@@ -49,12 +49,16 @@ describe('ReputationController', () => {
   // GET /reputation/:wallet
   // ---------------------------------------------------------------------------
   describe('getReputation', () => {
-    it('should return reputation data for a valid wallet', async () => {
+    it('should return reputation data wrapped in response envelope', async () => {
       mockReputationService.getReputationScore.mockResolvedValue(mockReputationResponse);
 
       const result = await controller.getReputation(validWallet);
 
-      expect(result).toEqual(mockReputationResponse);
+      expect(result).toEqual({
+        success: true,
+        data: mockReputationResponse,
+        message: 'Reputation score retrieved successfully',
+      });
       expect(reputationService.getReputationScore).toHaveBeenCalledWith(validWallet);
       expect(reputationService.getReputationScore).toHaveBeenCalledTimes(1);
     });
