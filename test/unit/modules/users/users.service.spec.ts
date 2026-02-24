@@ -1,124 +1,207 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { UsersService } from '../../../../src/modules/users/users.service';
-import { UsersRepository } from '../../../../src/modules/users/users.repository';
-import { UserProfileDto } from '../../../../src/modules/users/dto/user-profile.dto';
+import { UsersRepository } from '../../../../src/database/repositories/users.repository';
 
 describe('UsersService', () => {
-  let service: UsersService;
+    let service: UsersService;
+    let repository: UsersRepository;
 
-  const validWallet = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVW';
+    const mockPreferences = {
+        notifications_enabled: true,
+        language: 'en',
+        theme: 'system',
+    };
 
-  const baseProfile: UserProfileDto = {
-    wallet: validWallet,
-    name: null,
-    avatar: null,
-    preferences: { notifications: true, language: 'en', theme: 'system' },
-    updatedAt: '2026-02-20T10:00:00.000Z',
-  };
+    const mockExistingUser = {
+        id: 'uuid-123',
+        wallet_address: 'GABC123XYZ456DEF789ABCDEF0123456789ABCDEF0123456789ABCDEFGHIJ',
+        display_name: 'Maria Garcia',
+        avatar_url: 'https://example.com/avatar.png',
+        status: 'active' as const,
+        created_at: '2026-02-13T10:00:00.000Z',
+        user_preferences: mockPreferences,
+    };
 
-  const mockUsersRepository = {
-    update: jest.fn(),
-  };
+    const mockNewUser = {
+        id: 'uuid-456',
+        wallet_address: 'GNEW123XYZ456DEF789ABCDEF0123456789ABCDEF0123456789ABCDEFGHIJ',
+        display_name: null,
+        avatar_url: null,
+        status: 'active' as const,
+        created_at: '2026-02-19T14:00:00.000Z',
+        user_preferences: null,
+    };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: UsersRepository, useValue: mockUsersRepository },
-      ],
-    }).compile();
+    const mockUsersRepository = {
+        findByWallet: jest.fn(),
+        create: jest.fn(),
+        createDefaultPreferences: jest.fn(),
+        update: jest.fn(),
+    };
 
-    service = module.get<UsersService>(UsersService);
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                UsersService,
+                {
+                    provide: UsersRepository,
+                    useValue: mockUsersRepository,
+                },
+            ],
+        }).compile();
 
-    jest.clearAllMocks();
-    mockUsersRepository.update.mockResolvedValue(baseProfile);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  // ---------------------------------------------------------------------------
-  // updateProfile
-  // ---------------------------------------------------------------------------
-  describe('updateProfile', () => {
-    it('should update name successfully', async () => {
-      const expectedProfile: UserProfileDto = { ...baseProfile, name: 'Maria Garcia' };
-      mockUsersRepository.update.mockResolvedValue(expectedProfile);
-
-      const result = await service.updateProfile(validWallet, { name: 'Maria Garcia' });
-
-      expect(result.name).toBe('Maria Garcia');
-      expect(mockUsersRepository.update).toHaveBeenCalledWith(
-        validWallet,
-        expect.objectContaining({ name: 'Maria Garcia' }),
-      );
+        service = module.get<UsersService>(UsersService);
+        repository = module.get<UsersRepository>(UsersRepository);
     });
 
-    it('should update avatar successfully', async () => {
-      const expectedProfile: UserProfileDto = {
-        ...baseProfile,
-        avatar: 'https://example.com/avatar.jpg',
-      };
-      mockUsersRepository.update.mockResolvedValue(expectedProfile);
-
-      const result = await service.updateProfile(validWallet, {
-        avatar: 'https://example.com/avatar.jpg',
-      });
-
-      expect(result.avatar).toBe('https://example.com/avatar.jpg');
-      expect(mockUsersRepository.update).toHaveBeenCalledWith(
-        validWallet,
-        expect.objectContaining({ avatar: 'https://example.com/avatar.jpg' }),
-      );
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    it('should update preferences successfully', async () => {
-      const expectedProfile: UserProfileDto = {
-        ...baseProfile,
-        preferences: { notifications: false, language: 'es', theme: 'dark' },
-      };
-      mockUsersRepository.update.mockResolvedValue(expectedProfile);
-
-      const result = await service.updateProfile(validWallet, {
-        preferences: { notifications: false, language: 'es', theme: 'dark' },
-      });
-
-      expect(result.preferences).toEqual({
-        notifications: false,
-        language: 'es',
-        theme: 'dark',
-      });
-      expect(mockUsersRepository.update).toHaveBeenCalledWith(
-        validWallet,
-        expect.objectContaining({
-          preferences: { notifications: false, language: 'es', theme: 'dark' },
-        }),
-      );
+    it('should be defined', () => {
+        expect(service).toBeDefined();
     });
 
-    it('should throw BadRequestException when avatar URL does not use HTTPS', async () => {
-      await expect(
-        service.updateProfile(validWallet, { avatar: 'http://example.com/avatar.jpg' }),
-      ).rejects.toMatchObject({
-        response: { code: 'USERS_AVATAR_INVALID_SCHEME' },
-      });
+    // ---------------------------------------------------------------------------
+    // getOrCreateProfile (API-04)
+    // ---------------------------------------------------------------------------
+    describe('getOrCreateProfile', () => {
+        it('Case 1: returns existing user profile with preferences (no writes)', async () => {
+            mockUsersRepository.findByWallet.mockResolvedValue(mockExistingUser);
 
-      expect(mockUsersRepository.update).not.toHaveBeenCalled();
+            const result = await service.getOrCreateProfile(mockExistingUser.wallet_address);
+
+            expect(repository.findByWallet).toHaveBeenCalledWith(mockExistingUser.wallet_address);
+            expect(repository.create).not.toHaveBeenCalled();
+            expect(repository.createDefaultPreferences).not.toHaveBeenCalled();
+            expect(result).toEqual({
+                wallet: mockExistingUser.wallet_address,
+                name: mockExistingUser.display_name,
+                avatar: mockExistingUser.avatar_url,
+                preferences: {
+                    notifications: mockPreferences.notifications_enabled,
+                    theme: mockPreferences.theme,
+                    language: mockPreferences.language,
+                },
+                createdAt: mockExistingUser.created_at,
+            });
+        });
+
+        it('Case 2: creates a new user and default preferences on first login', async () => {
+            mockUsersRepository.findByWallet.mockResolvedValue(null);
+            mockUsersRepository.create.mockResolvedValue(mockNewUser);
+            mockUsersRepository.createDefaultPreferences.mockResolvedValue(mockPreferences);
+
+            const result = await service.getOrCreateProfile(mockNewUser.wallet_address);
+
+            expect(repository.findByWallet).toHaveBeenCalledWith(mockNewUser.wallet_address);
+            expect(repository.create).toHaveBeenCalledWith(mockNewUser.wallet_address);
+            expect(repository.createDefaultPreferences).toHaveBeenCalledWith(mockNewUser.id);
+            expect(result.wallet).toBe(mockNewUser.wallet_address);
+            expect(result.name).toBeNull();
+            expect(result.preferences.notifications).toBe(true);
+        });
+
+        it('Case 3: creates default preferences for a legacy user missing them', async () => {
+            const legacyUser = { ...mockExistingUser, user_preferences: null };
+            mockUsersRepository.findByWallet.mockResolvedValue(legacyUser);
+            mockUsersRepository.createDefaultPreferences.mockResolvedValue(mockPreferences);
+
+            const result = await service.getOrCreateProfile(legacyUser.wallet_address);
+
+            expect(repository.create).not.toHaveBeenCalled();
+            expect(repository.createDefaultPreferences).toHaveBeenCalledWith(legacyUser.id);
+            expect(result.preferences.theme).toBe('system');
+        });
     });
 
-    it('should strip HTML tags from name before saving', async () => {
-      await service.updateProfile(validWallet, { name: '<script>alert(1)</script>Maria' });
+    // ---------------------------------------------------------------------------
+    // updateProfile (API-05)
+    // ---------------------------------------------------------------------------
+    describe('updateProfile', () => {
+        const wallet = mockExistingUser.wallet_address;
 
-      expect(mockUsersRepository.update).toHaveBeenCalledWith(
-        validWallet,
-        expect.objectContaining({ name: 'Maria' }),
-      );
+        const mockUpdatedUser = {
+            id: mockExistingUser.id,
+            wallet_address: wallet,
+            display_name: 'Maria Garcia',
+            avatar_url: null,
+            updated_at: '2026-02-20T10:00:00.000Z',
+        };
+
+        beforeEach(() => {
+            mockUsersRepository.update.mockResolvedValue(mockUpdatedUser);
+            mockUsersRepository.findByWallet.mockResolvedValue(mockExistingUser);
+        });
+
+        it('should update name successfully', async () => {
+            const result = await service.updateProfile(wallet, { name: 'Maria Garcia' });
+
+            expect(repository.update).toHaveBeenCalledWith(
+                wallet,
+                expect.objectContaining({ name: 'Maria Garcia' }),
+            );
+            expect(result.name).toBe('Maria Garcia');
+        });
+
+        it('should update avatar successfully', async () => {
+            mockUsersRepository.update.mockResolvedValue({
+                ...mockUpdatedUser,
+                avatar_url: 'https://example.com/avatar.jpg',
+            });
+
+            const result = await service.updateProfile(wallet, {
+                avatar: 'https://example.com/avatar.jpg',
+            });
+
+            expect(repository.update).toHaveBeenCalledWith(
+                wallet,
+                expect.objectContaining({ avatar: 'https://example.com/avatar.jpg' }),
+            );
+            expect(result.avatar).toBe('https://example.com/avatar.jpg');
+        });
+
+        it('should update preferences successfully', async () => {
+            const userWithUpdatedPrefs = {
+                ...mockExistingUser,
+                user_preferences: { notifications_enabled: false, language: 'es', theme: 'dark' },
+            };
+            mockUsersRepository.findByWallet.mockResolvedValue(userWithUpdatedPrefs);
+
+            const result = await service.updateProfile(wallet, {
+                preferences: { notifications: false, language: 'es', theme: 'dark' },
+            });
+
+            expect(repository.update).toHaveBeenCalledWith(
+                wallet,
+                expect.objectContaining({
+                    preferences: { notifications: false, language: 'es', theme: 'dark' },
+                }),
+            );
+            expect(result.preferences).toEqual({
+                notifications: false,
+                language: 'es',
+                theme: 'dark',
+            });
+        });
+
+        it('should throw BadRequestException when avatar URL does not use HTTPS', async () => {
+            await expect(
+                service.updateProfile(wallet, { avatar: 'http://example.com/avatar.jpg' }),
+            ).rejects.toMatchObject({
+                response: { code: 'USERS_AVATAR_INVALID_SCHEME' },
+            });
+
+            expect(repository.update).not.toHaveBeenCalled();
+        });
+
+        it('should strip HTML tags from name before saving', async () => {
+            await service.updateProfile(wallet, { name: '<script>alert(1)</script>Maria' });
+
+            expect(repository.update).toHaveBeenCalledWith(
+                wallet,
+                expect.objectContaining({ name: 'Maria' }),
+            );
+        });
     });
-  });
 });

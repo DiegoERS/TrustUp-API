@@ -1,69 +1,20 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-
-interface JwtPayload {
-  wallet: string;
-  type: string;
-}
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
 /**
- * Guard that validates JWT access tokens on protected routes.
- * Extracts the Bearer token from the Authorization header, verifies its
- * signature and expiration, and attaches `{ wallet }` to `request.user`.
+ * PLACEHOLDER — This file will be fully implemented in API-03.
  *
- * Usage: @UseGuards(JwtAuthGuard)
+ * The final implementation will:
+ *  - Extend AuthGuard('jwt') from @nestjs/passport
+ *  - Validate the JWT using JwtStrategy (passport-jwt)
+ *  - Extract the wallet address from the payload
+ *  - Set req.user = { wallet: string }
+ *  - Throw UnauthorizedException for invalid/missing tokens
+ *
+ * DO NOT implement business logic here — wait for API-03.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-  ) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Record<string, unknown>>();
-    const token = this.extractToken(request);
-
-    if (!token) {
-      throw new UnauthorizedException({
-        code: 'AUTH_TOKEN_MISSING',
-        message: 'Authorization token is required.',
-      });
+    canActivate(_context: ExecutionContext): boolean {
+        throw new UnauthorizedException('JwtAuthGuard not yet implemented — pending API-03');
     }
-
-    try {
-      const payload = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-      });
-
-      if (payload.type !== 'access') {
-        throw new UnauthorizedException({
-          code: 'AUTH_TOKEN_INVALID',
-          message: 'Invalid token type.',
-        });
-      }
-
-      (request as Record<string, unknown>).user = { wallet: payload.wallet };
-      return true;
-    } catch (err) {
-      if (err instanceof UnauthorizedException) throw err;
-      throw new UnauthorizedException({
-        code: 'AUTH_TOKEN_INVALID',
-        message: 'Invalid or expired token.',
-      });
-    }
-  }
-
-  private extractToken(request: Record<string, unknown>): string | null {
-    const headers = request.headers as Record<string, string> | undefined;
-    const auth = headers?.authorization;
-    if (!auth?.startsWith('Bearer ')) return null;
-    return auth.slice(7);
-  }
 }
