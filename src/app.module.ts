@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { HealthModule } from './modules/health/health.module';
     ]),
     AuthModule,
     HealthModule,
+    UsersModule,
   ],
   providers: [
     {
