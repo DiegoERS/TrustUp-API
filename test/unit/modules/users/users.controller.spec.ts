@@ -88,13 +88,17 @@ describe('UsersController', () => {
     // PATCH /users/me (API-05)
     // ---------------------------------------------------------------------------
     describe('updateProfile', () => {
-        it('should call usersService.updateProfile and return the result', async () => {
+        it('should return the standard success response envelope with updated data', async () => {
             mockUsersService.updateProfile.mockResolvedValue(mockUpdatedProfile);
             const dto = { name: 'Maria Garcia', avatar: 'https://example.com/avatar.jpg' };
 
             const result = await controller.updateProfile(mockCurrentUser, dto);
 
-            expect(result).toEqual(mockUpdatedProfile);
+            expect(result).toEqual({
+                success: true,
+                data: mockUpdatedProfile,
+                message: 'Profile updated successfully',
+            });
             expect(service.updateProfile).toHaveBeenCalledWith(mockWallet, dto);
             expect(service.updateProfile).toHaveBeenCalledTimes(1);
         });

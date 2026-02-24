@@ -65,7 +65,8 @@ export class UsersController {
     async updateProfile(
         @CurrentUser() user: { wallet: string },
         @Body() dto: UpdateUserDto,
-    ): Promise<UpdateUserProfileDto> {
-        return this.usersService.updateProfile(user.wallet, dto);
+    ): Promise<{ success: boolean; data: UpdateUserProfileDto; message: string }> {
+        const data = await this.usersService.updateProfile(user.wallet, dto);
+        return { success: true, data, message: 'Profile updated successfully' };
     }
 }
